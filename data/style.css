@@ -224,10 +224,6 @@ body::-webkit-scrollbar {
   filter: drop-shadow(0.3rem 0.3rem 0 rgba(0, 0, 0, 0.2));
 }
 
-#title_main__logo_sub{
-  width: 50%;
-  filter: drop-shadow(0.3rem 0.3rem 0 rgba(0, 0, 0, 0.2));
-}
 
 #title_main__start{
   width: 100%;
