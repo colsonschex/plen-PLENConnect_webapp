@@ -203,7 +203,7 @@ body::-webkit-scrollbar {
 #title_main{
   width: 100%;
 
-  position: absolute;
+  position: relative;
 }
 
 #title_main__logo{
@@ -240,7 +240,7 @@ body::-webkit-scrollbar {
 
 #title_main__start_button{
   height: auto;
-  max-height: 45vh;
+  max-height: 30vh;
   position: absolute;
   top: 50%;
   left: 50%;
