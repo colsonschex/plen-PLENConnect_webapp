@@ -204,6 +204,8 @@ body::-webkit-scrollbar {
   width: 100%;
 
   position: relative;
+
+  display:flex;
 }
 
 #title_main__logo{
