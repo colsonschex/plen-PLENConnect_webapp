@@ -239,7 +239,7 @@ body::-webkit-scrollbar {
 }
 
 #title_main__start_button{
-  height: 100%;
+  height: auto;
 
   position: absolute;
   top: 50%;
