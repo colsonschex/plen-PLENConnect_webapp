@@ -237,7 +237,7 @@ body::-webkit-scrollbar {
 
   margin-top: 5vh;
 
-  position: absolute;
+  position: relative;
 }
 
 #title_main__start_button{
