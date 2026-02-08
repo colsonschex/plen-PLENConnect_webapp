@@ -219,6 +219,7 @@ body::-webkit-scrollbar {
 
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 50vh;
 }
 
 #title_main__logo_main{
