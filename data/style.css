@@ -232,12 +232,12 @@ body::-webkit-scrollbar {
 }
 
 #title_main__start{
-  width: 100%;
-  height: 8vw;
+  width: auto;
+  height: auto;
 
   margin-top: 5vh;
 
-  position: relative;
+  position: absolute;
 }
 
 #title_main__start_button{
