@@ -110,10 +110,10 @@ BlueJelly.prototype.requestDevice = function(uuid) {
   return navigator.bluetooth.requestDevice({
     acceptAllDevices: false,
     filters: [
-      {services: ['e1f40469-cfe1-43c1-838d-ddbc9dafdde6']}
+      { name: "PLEND" }   // ← or { namePrefix: "PLEN" } if you want partial match
     ],
     optionalServices: [this.hashUUID[uuid].serviceUUID]
-    })
+  })
   .then(device => {
     this.bluetoothDevice = device;
     this.bluetoothDevice.addEventListener('gattserverdisconnected', this.onDisconnect);
