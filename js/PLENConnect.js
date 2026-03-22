@@ -109,11 +109,13 @@ const MotionButton = new MotionButtonClass(['normal', 'box', 'soccer', 'dance'])
 class BleClass {
 	constructor() {
 		this.ble = new BlueJelly()
-		//UUIDの登録
-		this.ble.setUUID("BTaddr", "e1f40469-cfe1-43c1-838d-ddbc9dafdde6", "cf70ee7f-2a26-4f62-931f-9087ab12552c");
-		this.ble.setUUID("RXdata", "e1f40469-cfe1-43c1-838d-ddbc9dafdde6", "2ed17a59-fc21-488e-9204-503eb78158d7");
-		this.ble.setUUID("TXdata", "e1f40469-cfe1-43c1-838d-ddbc9dafdde6", "f90e9cfe-7e05-44a5-9d75-f13644d6f645");
-		this.ble.setUUID("BatteryLebel", "e1f40469-cfe1-43c1-838d-ddbc9dafdde6", "2a19");
+
+		// ESP32 UART (NUS) UUIDs
+		this.ble.setUUID("TXdata",
+			"6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+			"6e400002-b5a3-f393-e0a9-e50e24dcca9e"
+		)
+
 		this.CharacteristicIdName = ''
 		this.lastWriteUUID = "TXdata"
 		this.lastWriteString = ""
@@ -129,11 +131,15 @@ class BleClass {
 	Write(uuid, string) {
 		this.lastWriteUUID = uuid
 		this.lastWriteString = string
-		this.ble.write(uuid, string.split('').map(char => char.charCodeAt(0)))
+
+		// Convert ASCII → byte array
+		const bytes = string.split('').map(c => c.charCodeAt(0))
+
+		this.ble.write(uuid, bytes)
 	}
 
-	ReWrite(){
-		this.Write(this.lastWriteUUID,this.lastWriteString)
+	ReWrite() {
+		this.Write(this.lastWriteUUID, this.lastWriteString)
 	}
 }
 
@@ -158,25 +164,22 @@ Ble.ble.onDisconnect = function (deviceName) {
 
 //エラー時
 Ble.ble.onError = function (error) {
-	if (error.toString().search(/Web Bluetooth is not supported/) != -1 || error.toString().search(/Bluetooth Low Energy not available/) != -1) {
-		//非対応ブラウザ
+	if (error.toString().search(/Web Bluetooth is not supported/) != -1 ||
+		error.toString().search(/Bluetooth Low Energy not available/) != -1) {
+
 		Scene.Show('unsupported')
 		Scene.DestroyLoading(500)
+
 	} else {
 		if (progress == 'Scan') {
-			// スキャン失敗
 			ShowTitle()
 		} else if (progress == 'onScan') {
-			// 認証失敗
 			Ble.ble.connectGATT(Ble.CharacteristicIdName)
 		} else if (progress == 'onConnectGATT') {
-			// 送信失敗
 			Ble.ReWrite()
 		} else if (progress == 'onDisconnect') {
-			// 接続切れ
 			OnDisconnected()
 		} else {
-			// その他
 			ShowTitle()
 		}
 	}
@@ -191,7 +194,10 @@ class StickClass {
 		this.touchPoint = { x: 0, y: 0 }
 
 		this.walkMotionInterval = 500
-		this.walkMotion = { normal: { forward: 0x46, left: 0x47, right: 0x48, back: 0x49 }, box: { forward: 0x4A, left: 0x4B, right: 0x4C, back: 0x4D } }
+		this.walkMotion = {
+			normal: { forward: 0x46, left: 0x47, right: 0x48, back: 0x49 },
+			box: { forward: 0x4A, left: 0x4B, right: 0x4C, back: 0x4D }
+		}
 		this.walkMotionTimer
 		this.sendFlag = false
 		this.playWalkMotion = -1
@@ -199,7 +205,7 @@ class StickClass {
 
 		this.dragElemet = document.getElementById(id)
 
-		// タッチ操作
+		// Touch
 		this.dragElemet.ontouchstart = (e) => {
 			this.touchPoint.x = e.changedTouches[0].pageX
 			this.touchPoint.y = e.changedTouches[0].pageY
@@ -216,7 +222,7 @@ class StickClass {
 			this.DragEnd()
 		}
 
-		//マウス操作
+		// Mouse
 		this.dragElemet.onmousedown = (e) => {
 			this.touchPoint.x = e.clientX
 			this.touchPoint.y = e.clientY
@@ -233,7 +239,6 @@ class StickClass {
 			this.DragEnd()
 		}
 	}
-
 
 	DragStart() {
 		if (this.dragging) return 0
@@ -255,7 +260,7 @@ class StickClass {
 
 		let direction = Math.atan2(-deltaY, deltaX) / Math.PI * 180
 
-		let walkMotion = new Object()
+		let walkMotion = {}
 
 		if (MotionButton.displayType == 'box') {
 			walkMotion = Object.assign(this.walkMotion.box)
@@ -282,7 +287,6 @@ class StickClass {
 		this.dragElemet.style.top = '50%'
 	}
 
-
 	// 歩行モーション再生
 	PlayWalkMotion() {
 		this.sendFlag = true
@@ -298,7 +302,7 @@ class StickClass {
 		this.walkMotionTimer = setTimeout(() => this.PlayWalkMotion(), this.walkMotionInterval)
 	}
 
-	//　歩行モーション停止
+	// 歩行モーション停止
 	StopWalkMotion() {
 		this.playWalkMotion = -1
 		this.lastWalkMotion = -1
@@ -326,32 +330,25 @@ window.onpageshow = function (e) {
 	MotionButton.Show('normal')
 
 	if (BrowserCheck()) {
-		//オフラインで使用可能にする
 		if ('serviceWorker' in navigator) {
-			//古いバージョンの削除
 			if (navigator.onLine) {
-				//オンラインの場合ServiceWorker削除
 				navigator.serviceWorker.getRegistrations().then(function(registrations) {
 					for (let registration of registrations) {
 						registration.unregister();
 					}
 				}).catch(function(err) {
-					// 登録失敗
 					console.log('ServiceWorkerの削除に失敗しました。', err);
 				});
 			}
 
 			navigator.serviceWorker.register('sw.js').then(function(registration) {
-				// 登録成功
 			}).catch(function(err) {
-				// 登録失敗
 				console.log('ServiceWorkerの登録に失敗しました。', err);
 			});
 		}
 
 		ShowTitle()
 	} else {
-		//非対応ブラウザ
 		Scene.Show('unsupported')
 		Scene.DestroyLoading(500)
 	}
@@ -362,11 +359,9 @@ document.ondragstart = function () {
 	return false
 };
 
-
 // タイトル画面 ==================================
 function ShowTitle() {
 	progress = ''
-	//Scene.Show('controller')
 	Scene.Show('title')
 	Scene.DestroyLoading(500)
 }
@@ -376,7 +371,6 @@ StartButton.addEventListener('click', function () {
 	Scene.DisplayLoading(500)
 	Ble.Scan("TXdata")
 });
-
 
 // コントローラー画面 ============================
 function OnConnected() {
@@ -392,14 +386,17 @@ function OnDisconnected() {
 
 function PlayMotion(moionId) {
 	let writeData = ''
+
 	if (moionId == -1) {
 		writeData = 'SM'
 	} else {
+		// Convert motion ID to 2‑digit hex (PLEN protocol)
 		writeData = 'PM' + moionId.toString(16)
 	}
+
+	// Send ASCII command
 	Ble.Write("TXdata", "$" + writeData)
 }
-
 
 // その他========================================
 
@@ -409,25 +406,20 @@ function DisplayStatus(status) {
 
 function BrowserCheck() {
 	if (userAgent.indexOf("iphone") != -1) {
-		//iphone
 		Support = false;
 		Device = "ios";
 	} else if (userAgent.indexOf("ipad") != -1) {
-		//ipad
 		Support = false;
 		Device = "ios";
 	} else if (userAgent.indexOf("android") != -1) {
 		if (userAgent.indexOf("Android") != -1) {
-			//Android
 			Support = true;
 			Device = "Android";
 		} else {
-			//AndroidTablet
 			Support = true;
 			Device = "Android";
 		}
 	} else {
-		//PC
 		Support = true;
 		Device = "PC";
 	}
@@ -435,15 +427,12 @@ function BrowserCheck() {
 	if (Support) {
 		if (userAgent.indexOf("msie") != -1 ||
 			userAgent.indexOf("trident") != -1) {
-			//IE
 			Support = false;
 			Browser = "IE";
 		} else if (userAgent.indexOf("edge") != -1) {
-			//edge
 			Support = false;
 			Browser = "Edge";
 		} else if (userAgent.indexOf("opr") != -1) {
-			//Opera
 			if (Device == "PC") {
 				Support = false;
 			} else {
@@ -451,19 +440,15 @@ function BrowserCheck() {
 			}
 			Browser = "Opera";
 		} else if (userAgent.indexOf("chrome") != -1) {
-			//chrome
 			Support = true;
 			Browser = "Chrome";
 		} else if (userAgent.indexOf("safari") != -1) {
-			//Safari
 			Support = false;
 			Browser = "Safari";
 		} else if (userAgent.indexOf("firefox") != -1) {
-			//FireFox
 			Support = false;
 			Browser = "FireFox";
 		} else if (userAgent.indexOf("opera") != -1) {
-			//Opera
 			if (Device == "PC") {
 				Support = false;
 			} else {
@@ -471,18 +456,14 @@ function BrowserCheck() {
 			}
 			Browser = "Opera";
 		} else if (userAgent.indexOf("samsungbrowser") != -1) {
-			//Samsung Internet Browser
 			Support = true;
 			Browser = "SamsungInternetBrowser";
 		} else {
-			//Others
 			Support = false;
 			Browser = "Unknown";
 		}
 	} else {
-		//例外
 		if (userAgent.indexOf("bluefy") != -1) {
-			//Bluefy
 			Support = true;
 			Browser = "Bluefy";
 		}
